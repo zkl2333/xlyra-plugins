@@ -95,6 +95,10 @@ chat 不带 Accept、官方提示词 v2 + 工具 2.x body）。注意 dsh-our-fr
    `opencode_go.go` 官方头集合补全（`x-opencode-client`/`x-opencode-session`/
    `x-session-id`/每请求新 40-hex `x-opencode-project`、UA `2.1.1`）+
    **官方降序时间戳 session 铸造**（第四道门的修复）；
+   **review 修正（2026-11-13 晚）**：头集合与 session 编码的变化**全部门控到
+   开关之后**——未开开关的既有 zen/go 站点保持原样（旧 UA 2.0.29、旧字符集
+   校验、旧正序铸造）；官方模式下下游带来的旧编码 session 会被
+   `openCodeGoIsOfficialSessionID`（mod 2^36 相位窗口判定）拦下并改铸官方 id。
 4. ⬜ 本仓库交付 `free-opencode` site_provider：免费目录过滤、品牌化、
    错误分类→cooldown；官方提示词/工具注入由 `rewritePayload` 承担（资产从
    o2a 仓库取 `opencode_prompt_v2.txt` + `opencode_tools.json`）。
