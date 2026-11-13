@@ -75,16 +75,34 @@ minimax-m3.1-flash-free、nemotron-3.5-lightning-free、nemotron-3.5-super-vl-fr
 chat 不带 Accept、官方提示词 v2 + 工具 2.x body）。注意 dsh-our-free-model 的
 族路径 `/inference/openai/v1/*` 与其 UA 已过时（V5 全灭的原因之一）。
 
-核心补丁内容（全部有实验代码背书，见 `.research/header-order-exp/main.go`）：
+**第四道门（2026-11-13 晚定案）：session 时间戳编码**。官方 session id 的
+12 位 hex 是**位取反的降序时间戳**：`~((UTC午夜 − 30天内随机偏移) << 12 | 1)`
+取 48 位。上游按此解码并拒绝窗口外（>30 天）的时间——正序 UnixMilli hex 会被
+解码成远未来 → 429 `FreeUsageLimitError`（身份已过、只怨时间戳）。project id
+每请求换新 40-hex 没问题（实测 200）。二分证据：旧 session+新 project=200，
+新 session（正序编码）+旧 project=429。
 
-1. `bunClientHelloSpec()` 加入 `internal/httpclient/tlsfingerprint.go`（~35 行）；
-2. Bun 头布局 RoundTripper（手写请求头 + uTLS 拨号，~150–600 行，可精简）——
-   仅有指纹拨号器不够（V2/V3/V4 证明），必须接管请求头渲染；
-3. `impersonate_opencode` 站点开关 + 动态头生成（session 铸造、每请求 40-hex
-   project、UA 常量）——照抄 codex/claude_code 的现成模式；
-4. 本仓库交付 `free-opencode` site_provider：扁平路径声明、免费目录过滤、品牌化、
+核心补丁内容（全部有实验代码背书，见 `.research/header-order-exp/main.go`）——
+**已落地：xLyra 本地克隆分支 `feat/opencode-zen-bun-transport`，commit `2649391`，
+活体测试 `TestLiveOpenCodeZenFreeLaneBunTransport`（env `XLYRA_LIVE_OPENCODE_ZEN=1`）
+实测 HTTP 200 SSE**：
+
+1. ✅ `tlsfingerprint.go`：`TLSFingerprintBun` + `bunClientHelloSpec()`；
+2. ✅ `httpclient/buntransport.go`：BunTransport（uTLS Bun 握手 + Bun 头布局手写
+   渲染 + gzip/br/zstd 解码 + 连接池），移植自 opencode2api（GPL-3.0→AGPL-3.0
+   合规，保留署名）；拨号沿用 xLyra 的 SSRF 防护/代理管线；
+3. ✅ 站点开关 `gateway.impersonate_opencode_client`（admin API 可设）+
+   `opencode_go.go` 官方头集合补全（`x-opencode-client`/`x-opencode-session`/
+   `x-session-id`/每请求新 40-hex `x-opencode-project`、UA `2.1.1`）+
+   **官方降序时间戳 session 铸造**（第四道门的修复）；
+4. ⬜ 本仓库交付 `free-opencode` site_provider：免费目录过滤、品牌化、
    错误分类→cooldown；官方提示词/工具注入由 `rewritePayload` 承担（资产从
    o2a 仓库取 `opencode_prompt_v2.txt` + `opencode_tools.json`）。
+   用户侧：站点 `base_url=https://opencode.ai/inference`、api_key `public`、
+   开 `impersonate_opencode_client`。
+
+Windows 克隆基线注意：`go build ./...` 因 pirpc 约束失败；内置插件 sha256 导致
+95 个既有测试失败——补丁前后失败集合 diff 为空（零新增失败）。
 
 ### 已否决：opencode2api sidecar（仅作机制验证记录）
 
