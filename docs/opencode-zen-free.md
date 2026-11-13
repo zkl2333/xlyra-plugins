@@ -48,31 +48,29 @@ minimax-m3.1-flash-free、nemotron-3.5-lightning-free、nemotron-3.5-super-vl-fr
 
 ## 接入方案
 
-### 方案一：opencode2api sidecar（零核心改动，立即可用）
+### 路线（已定）：宿主能力 + 插件交付
+
+本仓库是插件仓库，交付物是 `.xlp` 插件包；**部署第三方网关（sidecar）的方案已否决**
+（2026-11-13，定位不符——我们是插件作者，不为 opencode 运维网关）。
+
+插件单独做不到（四道宿主层门禁），正确路径是给 xLyra 核心补
+`impersonate_opencode`——顺着它已有的 `impersonate_codex_client` /
+`impersonate_claude_code_client` 站点级伪装模式做第三个实例：
+
+1. `bunClientHelloSpec()` 加入 `internal/httpclient/tlsfingerprint.go`（~30 行）；
+2. 动态 `x-opencode-session*`/`project` 头生成（照抄 codex/claude_code 的指纹头模式）；
+3. （仅当头序实验证明门禁校验头布局时）原始 HTTP/1.1 头渲染器；
+4. 之后本仓库交付 `free-opencode` site_provider：端点族/免费目录过滤/品牌化/
+   错误分类→cooldown，body 整形可由 `rewritePayload` 承担。
+
+待定案：头序隔离实验（uTLS-Bun hello + Go 排序头）→ 决定第 3 步是否需要。
+
+### 已否决：opencode2api sidecar（仅作机制验证记录）
 
 [参考实现 jasonxu114514/opencode2api](https://github.com/jasonxu114514/opencode2api)
-（GPL-3.0，v1.4.7）是完整产品：整形 + BunTransport + 模型目录 + 会话亲和 + 熔断退避。
-
-部署在 xLyra 实例同机（如 Docker compose 同网络），xLyra 加 `openai` 通用站点：
-
-- base_url：`http://127.0.0.1:18080`（同宿主机）或 compose 服务名
-- api_key：opencode2api 的 `server_keys` 之一
-- 已验证：`/v1/models`、`/v1/chat/completions`、SSE 流式全部正常
-
-本机验证用配置（`.research/o2a-test/config.json`，仅监听 127.0.0.1，WebUI 关闭）：
-`anonymous: true` + `proxies: ["direct"]` + `free_only: true` 即可，无需任何 key。
-
-### 方案二：xLyra 核心原生接入（"完美接入"，中期）
-
-xLyra 为 AGPL-3.0，GPL-3.0 的 BunTransport（约 700 行，依赖
-refraction-networking/utls、andybalholm/brotli、klauspost/compress/zstd）可合法移植
-（保留署名）。要点：
-
-1. 移植 `BunTransport` 为 per-site 可选传输（`impersonate: bun`）；
-2. 移植整形（官方提示词/工具资产在两个参考仓库里都有捕获件）；
-3. 新站点类型（或扩展内置 `opencode_go`）：目录按 isFree 过滤、按模型分流三种端点、
-   429/403 走 xLyra 既有 per-credential cooldown 机制；
-4. 指纹漂移维护：上游改指纹时需跟版（参考 opencode2api 的更新节奏）。
+（GPL-3.0，v1.4.7）在本机验证过完整链路（127.0.0.1:18080，`anonymous: true` +
+`proxies: ["direct"]`，`/v1/models`、`/v1/chat/completions`、SSE 全通），
+作为"Go 能过门禁"的实验证据保留；不作为部署方案。
 
 ## 风险与边界
 
