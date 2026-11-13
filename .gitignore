@@ -1,0 +1,11 @@
+node_modules/
+*.exe
+*.key
+dist/
+*.xlp
+*.pem
+.DS_Store
+
+# 密钥：绝不入库
+.env
+.env.*

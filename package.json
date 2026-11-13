@@ -1,0 +1,13 @@
+{
+  "name": "xlyra-plugins-monorepo",
+  "private": true,
+  "type": "module",
+  "description": "xLyra 网关插件集：plugins/ 下每个目录一个独立 .xlp 插件包。",
+  "devDependencies": {
+    "@yachiyo-5i/xlyra-plugin-sdk": "*",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  }
+}
