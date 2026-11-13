@@ -55,15 +55,36 @@ minimax-m3.1-flash-free、nemotron-3.5-lightning-free、nemotron-3.5-super-vl-fr
 
 插件单独做不到（四道宿主层门禁），正确路径是给 xLyra 核心补
 `impersonate_opencode`——顺着它已有的 `impersonate_codex_client` /
-`impersonate_claude_code_client` 站点级伪装模式做第三个实例：
+`impersonate_claude_code_client` 站点级伪装模式做第三个实例。
 
-1. `bunClientHelloSpec()` 加入 `internal/httpclient/tlsfingerprint.go`（~30 行）；
-2. 动态 `x-opencode-session*`/`project` 头生成（照抄 codex/claude_code 的指纹头模式）；
-3. （仅当头序实验证明门禁校验头布局时）原始 HTTP/1.1 头渲染器；
-4. 之后本仓库交付 `free-opencode` site_provider：端点族/免费目录过滤/品牌化/
-   错误分类→cooldown，body 整形可由 `rewritePayload` 承担。
+**头序隔离实验已定案（2026-11-13，`.research/header-order-exp/`，Go 实测）**：
 
-待定案：头序隔离实验（uTLS-Bun hello + Go 排序头）→ 决定第 3 步是否需要。
+| 变体 | TLS | 头布局 | 头集合/路径/body | 结果 |
+|---|---|---|---|---|
+| V1 | Go stdlib | stdlib | dump 配方 | 401 |
+| V2 | uTLS Bun | stdlib 排序 | dump 配方 | 401 |
+| V3 | uTLS Bun | 原拼写+排序 | dump 配方 | 401 |
+| V4 | uTLS Bun | 原拼写+排序 | dump+Bun AE 值 | 401 |
+| V5 | uTLS Bun | Bun 布局 | dump 配方 | 401 |
+| V6a | uTLS Bun | stdlib 序 | **o2a 捕获集** | 连接被掐（非 401） |
+| V6b | uTLS Bun | **Bun 布局** | **o2a 捕获集** | **200 SSE 出 token** |
+
+结论：三件事缺一不可——① uTLS Bun ClientHello；② Bun 头布局（webkit 常见头
+固定序 + 其余小写排序 + Host 在尾部）；③ o2a 当前配方（扁平路径
+`/inference/v1/chat/completions`、UA `opencode/latest/2.1.1/cli`、无 trace 头、
+chat 不带 Accept、官方提示词 v2 + 工具 2.x body）。注意 dsh-our-free-model 的
+族路径 `/inference/openai/v1/*` 与其 UA 已过时（V5 全灭的原因之一）。
+
+核心补丁内容（全部有实验代码背书，见 `.research/header-order-exp/main.go`）：
+
+1. `bunClientHelloSpec()` 加入 `internal/httpclient/tlsfingerprint.go`（~35 行）；
+2. Bun 头布局 RoundTripper（手写请求头 + uTLS 拨号，~150–600 行，可精简）——
+   仅有指纹拨号器不够（V2/V3/V4 证明），必须接管请求头渲染；
+3. `impersonate_opencode` 站点开关 + 动态头生成（session 铸造、每请求 40-hex
+   project、UA 常量）——照抄 codex/claude_code 的现成模式；
+4. 本仓库交付 `free-opencode` site_provider：扁平路径声明、免费目录过滤、品牌化、
+   错误分类→cooldown；官方提示词/工具注入由 `rewritePayload` 承担（资产从
+   o2a 仓库取 `opencode_prompt_v2.txt` + `opencode_tools.json`）。
 
 ### 已否决：opencode2api sidecar（仅作机制验证记录）
 
