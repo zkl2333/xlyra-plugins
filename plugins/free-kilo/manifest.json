@@ -1,14 +1,16 @@
 {
   "apiVersion": 1,
   "hostApi": 1,
-  "id": "free-kilo",
+  "id": "zkl2333.free-kilo",
   "kind": "site_provider",
   "name": "Kilo Free Pool",
-  "description": "Kilo AI 公共免费模型池（api.kilo.ai 的 isFree 模型）：零密钥、零鉴权、零伪装，模型列表与对话均不需要任何凭据。",
-  "version": "0.1.0",
+  "description": "Kilo AI 公共免费模型池（api.kilo.ai 的 isFree 模型）：零密钥、零鉴权、零伪装；模型同步只保留免密可用的 isFree 模型，付费模型不进列表。",
+  "version": "0.2.1",
   "license": "MIT",
+  "xlyra": ">=1.18.0",
+  "icon": "assets/icon.png",
   "siteProvider": {
-    "siteType": "free-kilo/gateway",
+    "siteType": "zkl2333.free-kilo/gateway",
     "display": {
       "name": { "zh": "Kilo 免费池", "en": "Kilo Free Pool" },
       "subtitle": { "zh": "免密钥免费模型（isFree 池）", "en": "Keyless free models (isFree pool)" }

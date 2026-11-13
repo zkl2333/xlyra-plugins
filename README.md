@@ -10,7 +10,7 @@
 
 | 插件 | kind | 说明 |
 | --- | --- | --- |
-| [free-kilo](plugins/free-kilo/) | `site_provider` | Kilo AI 公共免费池（`isFree` 模型，2026-11 快照 14 个，含 1M ctx 的 NVIDIA/百度免费模型）：零密钥零鉴权，纯 manifest 声明（清 Authorization 头 + 无关头放凭据占位） |
+| [free-kilo](plugins/free-kilo/)（`zkl2333.free-kilo`） | `site_provider` | Kilo AI 公共免费池：零密钥零鉴权，清 Authorization 头转发；`listModels` 钩子只同步 `isFree` 模型（2026-11 快照 473 个中的 13 个，含 1M ctx 的 NVIDIA/百度免费模型） |
 
 ### 路线记录
 
@@ -37,6 +37,8 @@ xlyra-plugin verify dist/<id>-<version>.xlp
 ```
 
 发布两条路：私下分发（`.xlp` + 公钥给管理员导入，**`site_provider` 必须签名**）或 xLyra Cloud 市场（命名空间 id，审核制）。
+
+本仓库的市场命名空间是 **`zkl2333`**（开发者「多吃点」）：新插件 id 一律写成 `zkl2333.<名字>`，并加上 `assets/icon.png`（方形 PNG ≤64 KiB，推荐不透明满版，规范见 xLyra `docs/plugins/manifest.md#图标`）。签名公钥 `free-kilo-public-key.txt` 是登记到 xLyra Cloud 的那一把。
 
 ## 注意
 

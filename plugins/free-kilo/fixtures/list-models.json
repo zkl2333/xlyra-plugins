@@ -1,0 +1,360 @@
+{
+  "name": "keeps only isFree models (snapshot 2026-11-13, trimmed)",
+  "hook": "listModels",
+  "ctx": {
+    "siteType": "zkl2333.free-kilo/gateway",
+    "baseURL": "https://api.kilo.ai/api/gateway",
+    "credentialType": "api_key",
+    "now": 0
+  },
+  "responses": [
+    {
+      "match": {
+        "method": "GET",
+        "path": "/models"
+      },
+      "status": 200,
+      "json": {
+        "data": [
+          {
+            "id": "kilo-auto/free",
+            "name": "Auto Free",
+            "created": 0,
+            "description": "Rotates through available free models. Limited capability and no credits required. [Learn more](https://kilo.ai/docs/cod",
+            "architecture": {
+              "input_modalities": [
+                "text"
+              ],
+              "output_modalities": [
+                "text"
+              ],
+              "tokenizer": "Other"
+            },
+            "top_provider": {
+              "is_moderated": false,
+              "context_length": 256000,
+              "max_completion_tokens": 32768
+            },
+            "pricing": {
+              "prompt": "0",
+              "completion": "0",
+              "input_cache_read": "0",
+              "input_cache_write": "0",
+              "request": "0",
+              "image": "0",
+              "web_search": "0",
+              "internal_reasoning": "0"
+            },
+            "context_length": 256000,
+            "supported_parameters": [
+              "max_tokens",
+              "temperature",
+              "tools",
+              "reasoning",
+              "include_reasoning"
+            ],
+            "isFree": true,
+            "mayTrainOnYourPrompts": true,
+            "autoRouting": {
+              "models": [
+                "baidu/ernie-5.5-flash-preview:free",
+                "dots-studio/dots-3-note-preview:free",
+                "nvidia/nemotron-3-ultra-550b-a55b:free",
+                "nvidia/nemotron-3.5-super-vl:free",
+                "stealth/glyph-cluster"
+              ]
+            }
+          },
+          {
+            "id": "kilo-auto/efficient",
+            "name": "Auto Efficient",
+            "created": 0,
+            "description": "Routes each request to the cheapest model that gets the job done, based on continuously benchmarked accuracy and cost.",
+            "architecture": {
+              "input_modalities": [
+                "text",
+                "image"
+              ],
+              "output_modalities": [
+                "text"
+              ],
+              "tokenizer": "Other"
+            },
+            "top_provider": {
+              "is_moderated": false,
+              "context_length": 1000000,
+              "max_completion_tokens": 65536
+            },
+            "pricing": {
+              "prompt": "-1",
+              "completion": "-1",
+              "request": "0",
+              "image": "0",
+              "web_search": "0",
+              "internal_reasoning": "0"
+            },
+            "context_length": 1000000,
+            "supported_parameters": [
+              "max_tokens",
+              "temperature",
+              "tools",
+              "reasoning",
+              "include_reasoning"
+            ],
+            "isFree": false,
+            "mayTrainOnYourPrompts": false,
+            "autoRouting": {
+              "models": [
+                "anthropic/claude-haiku-5.5",
+                "deepseek/deepseek-v4.1-flash-1017",
+                "google/gemini-3.8-flash",
+                "inclusionai/ling-3.1-flash",
+                "mistralai/mistral-large-4-0",
+                "moonshotai/kimi-k3",
+                "openai/gpt-6-luna",
+                "qwen/qwen3.8-flash",
+                "qwen/qwen3.8-max-0902",
+                "stepfun/step-5-preview",
+                "x-ai/grok-4.7",
+                "xiaomi/mimo-v2.6-pro",
+                "z-ai/glm-5.3",
+                "z-ai/glm-5.3-flash"
+              ]
+            }
+          },
+          {
+            "id": "nvidia/nemotron-3.5-super-vl:free",
+            "name": "NVIDIA: Nemotron 3.5 Super VL (free)",
+            "created": 1792076662,
+            "description": "NVIDIA Nemotron 3.5 Super VL is an open multimodal mixture-of-experts model from NVIDIA, with 12B active parameters out ",
+            "architecture": {
+              "modality": "text+image+video->text",
+              "input_modalities": [
+                "text",
+                "image",
+                "video"
+              ],
+              "output_modalities": [
+                "text"
+              ],
+              "tokenizer": "Other"
+            },
+            "top_provider": {
+              "is_moderated": false,
+              "context_length": 1000000,
+              "max_completion_tokens": 131072
+            },
+            "pricing": {
+              "prompt": "0",
+              "completion": "0",
+              "discount": 0
+            },
+            "context_length": 1000000,
+            "supported_parameters": [
+              "include_reasoning",
+              "max_tokens",
+              "reasoning",
+              "response_format",
+              "seed",
+              "structured_outputs",
+              "temperature",
+              "tool_choice",
+              "tools",
+              "top_p"
+            ],
+            "isFree": true,
+            "mayTrainOnYourPrompts": true,
+            "expiration_date": null
+          },
+          {
+            "id": "nvidia/nemotron-3.5-super-vl",
+            "name": "NVIDIA: Nemotron 3.5 Super VL",
+            "created": 1792076662,
+            "description": "NVIDIA Nemotron 3.5 Super VL is an open multimodal mixture-of-experts model from NVIDIA, with 12B active parameters out ",
+            "architecture": {
+              "modality": "text+image+video->text",
+              "input_modalities": [
+                "text",
+                "image",
+                "video"
+              ],
+              "output_modalities": [
+                "text"
+              ],
+              "tokenizer": "Other"
+            },
+            "top_provider": {
+              "is_moderated": false,
+              "context_length": 1048576,
+              "max_completion_tokens": 943718
+            },
+            "pricing": {
+              "prompt": "0.00000006",
+              "completion": "0.00000035",
+              "input_cache_read": "0.00000001",
+              "discount": 0
+            },
+            "context_length": 1048576,
+            "supported_parameters": [
+              "frequency_penalty",
+              "include_reasoning",
+              "logit_bias",
+              "logprobs",
+              "max_tokens",
+              "min_p",
+              "presence_penalty",
+              "reasoning",
+              "repetition_penalty",
+              "response_format",
+              "seed",
+              "stop",
+              "structured_outputs",
+              "temperature",
+              "tool_choice",
+              "tools",
+              "top_k",
+              "top_logprobs",
+              "top_p"
+            ],
+            "isFree": false,
+            "mayTrainOnYourPrompts": false,
+            "expiration_date": null
+          },
+          {
+            "id": "humansand/ampersand-v0.1",
+            "name": "Ampersand v0.1",
+            "created": 1793923200,
+            "description": "Ampersand v0.1 is a collaborator model from Humans& for shared goals, group conversations, and long-running collaboratio",
+            "architecture": {
+              "input_modalities": [
+                "text"
+              ],
+              "output_modalities": [
+                "text"
+              ],
+              "tokenizer": "Other"
+            },
+            "top_provider": {
+              "is_moderated": false,
+              "context_length": 1000000,
+              "max_completion_tokens": 32768
+            },
+            "pricing": {
+              "prompt": "0",
+              "completion": "0"
+            },
+            "context_length": 1000000,
+            "supported_parameters": [
+              "max_tokens",
+              "temperature",
+              "stop",
+              "tools",
+              "tool_choice",
+              "reasoning",
+              "include_reasoning"
+            ],
+            "isFree": false,
+            "mayTrainOnYourPrompts": true
+          },
+          {
+            "id": "openrouter/free",
+            "name": "OpenRouter Free Models Router",
+            "created": 1769917427,
+            "description": "The simplest way to get free inference. openrouter/free is a router that selects free models at random from the models a",
+            "architecture": {
+              "modality": "text+image->text",
+              "input_modalities": [
+                "text",
+                "image"
+              ],
+              "output_modalities": [
+                "text"
+              ],
+              "tokenizer": "Router"
+            },
+            "top_provider": {
+              "is_moderated": false,
+              "context_length": null,
+              "max_completion_tokens": null
+            },
+            "pricing": {
+              "prompt": "0",
+              "completion": "0"
+            },
+            "context_length": 200000,
+            "supported_parameters": [
+              "frequency_penalty",
+              "include_reasoning",
+              "logprobs",
+              "max_completion_tokens",
+              "max_tokens",
+              "min_p",
+              "presence_penalty",
+              "reasoning",
+              "reasoning_effort",
+              "repetition_penalty",
+              "response_format",
+              "seed",
+              "stop",
+              "structured_outputs",
+              "temperature",
+              "tool_choice",
+              "tools",
+              "top_k",
+              "top_logprobs",
+              "top_p"
+            ],
+            "isFree": true,
+            "mayTrainOnYourPrompts": true,
+            "expiration_date": null
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/models"
+      }
+    ],
+    "result": {
+      "models": [
+        {
+          "name": "kilo-auto/free",
+          "displayName": "Auto Free",
+          "capabilities": {
+            "supported_endpoint_types": [
+              "openai"
+            ],
+            "input_token_limit": 256000,
+            "output_token_limit": 32768
+          }
+        },
+        {
+          "name": "nvidia/nemotron-3.5-super-vl:free",
+          "displayName": "NVIDIA: Nemotron 3.5 Super VL (free)",
+          "capabilities": {
+            "supported_endpoint_types": [
+              "openai"
+            ],
+            "input_token_limit": 1000000,
+            "output_token_limit": 131072
+          }
+        },
+        {
+          "name": "openrouter/free",
+          "displayName": "OpenRouter Free Models Router",
+          "capabilities": {
+            "supported_endpoint_types": [
+              "openai"
+            ],
+            "input_token_limit": 200000,
+            "output_token_limit": null
+          }
+        }
+      ]
+    }
+  }
+}

@@ -6,8 +6,8 @@ const root = new URL('../', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('plugins/free-kilo/manifest.json', root), 'utf8'));
 
 test('site identity and allowed upstream are fixed', () => {
-  assert.equal(manifest.id, 'free-kilo');
-  assert.equal(manifest.siteProvider.siteType, 'free-kilo/gateway');
+  assert.equal(manifest.id, 'zkl2333.free-kilo');
+  assert.equal(manifest.siteProvider.siteType, 'zkl2333.free-kilo/gateway');
   assert.deepEqual(manifest.siteProvider.hosts, ['api.kilo.ai']);
   assert.equal(manifest.siteProvider.protocol.officialBaseURL, 'https://api.kilo.ai/api/gateway');
 });
@@ -20,9 +20,23 @@ test('chat forwarding strips adapter authentication', () => {
   assert.equal(manifest.siteProvider.protocol.path, '/chat/completions');
 });
 
-test('model listing places placeholder in a separate header', () => {
+test('generic key check places placeholder in a separate header', () => {
+  // listModels 钩子接管了模型列表；models.path/auth 仍供通用适配器验 Key 与健康检查。
   assert.equal(manifest.siteProvider.models.path, '/models');
   assert.equal(manifest.siteProvider.models.auth, 'header:X-Kilo-Free-Key');
+});
+
+test('model list hook keeps only isFree models', () => {
+  const source = readFileSync(new URL('plugins/free-kilo/src/index.ts', root), 'utf8');
+  assert.match(source, /export function listModels\(/);
+  const fixture = JSON.parse(readFileSync(new URL('plugins/free-kilo/fixtures/list-models.json', root), 'utf8'));
+  const upstream = fixture.responses[0].json.data;
+  const free = upstream.filter(item => item.isFree === true).map(item => item.id);
+  assert.ok(upstream.length > free.length, 'fixture must include paid models to filter out');
+  assert.deepEqual(fixture.expect.result.models.map(model => model.name), free);
+  for (const model of fixture.expect.result.models) {
+    assert.deepEqual(model.capabilities.supported_endpoint_types, ['openai']);
+  }
 });
 
 test('private credentials and signing keys are ignored', () => {

@@ -1,0 +1,16 @@
+{
+  "name": "non-list body is rejected",
+  "hook": "listModels",
+  "ctx": { "siteType": "zkl2333.free-kilo/gateway", "baseURL": "https://api.kilo.ai/api/gateway", "credentialType": "api_key", "now": 0 },
+  "responses": [
+    {
+      "match": { "method": "GET", "path": "/models" },
+      "status": 200,
+      "json": { "error": { "code": "INVALID_TOKEN", "message": "Your authentication token is invalid. Please sign in again." } }
+    }
+  ],
+  "expect": {
+    "requests": [{ "method": "GET", "path": "/models" }],
+    "error": "models response has no data array"
+  }
+}

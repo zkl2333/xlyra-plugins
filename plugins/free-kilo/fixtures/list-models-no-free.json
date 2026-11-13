@@ -1,0 +1,21 @@
+{
+  "name": "no isFree flag anywhere is reported, not synced as an empty site",
+  "hook": "listModels",
+  "ctx": { "siteType": "zkl2333.free-kilo/gateway", "baseURL": "https://api.kilo.ai/api/gateway", "credentialType": "api_key", "now": 0 },
+  "responses": [
+    {
+      "match": { "method": "GET", "path": "/models" },
+      "status": 200,
+      "json": {
+        "data": [
+          { "id": "kilo-auto/efficient", "name": "Auto Efficient", "isFree": false },
+          { "id": "humansand/ampersand-v0.1", "name": "Ampersand v0.1", "pricing": { "prompt": "0", "completion": "0" } }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "requests": [{ "method": "GET", "path": "/models" }],
+    "error": "none of the 2 upstream models is flagged isFree"
+  }
+}

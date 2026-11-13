@@ -1,12 +1,17 @@
 # fixtures 说明
 
-本插件是**零钩子**设计（全部行为由 manifest 声明），没有可进 `xlyra-plugin test` 样本的钩子函数，所以这里没有 `*.json` 样本。
+`listModels` 钩子的样本，`xlyra-plugin test plugins/free-kilo` 会全部跑一遍：
 
-若将来加 `listModels` 钩子（例如按 `isFree` 过滤），样本应放在本目录，命名参照官方示例（`list-models.json` 等），并用真实响应做底稿：
+| 文件 | 覆盖 |
+| --- | --- |
+| `list-models.json` | 真实 `/models` 快照（2026-11-13）裁剪出的 6 条：只留 3 个 `isFree`。被过滤掉的有付费路由 `kilo-auto/efficient`、`:free` 版的付费同名 `nvidia/nemotron-3.5-super-vl`、标价为 0 但不是 `isFree` 的 `humansand/ampersand-v0.1`；`openrouter/free` 的最大输出为 `null`，不写 `output_token_limit` |
+| `list-models-http-error.json` | 上游非 2xx：报错，不返回空列表 |
+| `list-models-no-free.json` | 一个 `isFree` 都没有（多半是上游改了字段）：报错 |
+| `list-models-bad-shape.json` | 响应里没有 `data` 数组：报错 |
+
+更新快照时请用真实响应做底稿，裁剪后再放进样本（完整列表约 610 KB，不要整份入库）：
 
 ```bash
-curl -s -m 90 https://api.kilo.ai/api/gateway/models -o /tmp/kilo-models.json
-# （注意给足超时——列表约 600KB，20 秒会截断）
+curl -s -m 90 https://api.kilo.ai/api/gateway/models -o kilo-models.json
+# 给足超时；20 秒可能截断
 ```
-
-上游关键行为的实测记录（免鉴权 200 / 带无效 Authorization 401）见 `../src/index.ts` 头部注释。
