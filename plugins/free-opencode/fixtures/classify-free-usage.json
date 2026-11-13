@@ -1,0 +1,11 @@
+{
+  "name": "429 FreeUsageLimitError maps to limited",
+  "hook": "classify",
+  "ctx": { "siteType": "zkl2333.free-opencode/gateway" },
+  "input": {
+    "status": 429,
+    "type": "FreeUsageLimitError",
+    "message": "Free usage limit reached. Free models work in OpenCode (https://opencode.ai); subscribe to OpenCode Go to keep going: https://opencode.ai/go"
+  },
+  "expect": { "result": { "class": "limited", "reason": "opencode zen free-tier usage limit" } }
+}

@@ -11,10 +11,11 @@
 | 插件 | kind | 说明 |
 | --- | --- | --- |
 | [free-kilo](plugins/free-kilo/)（`zkl2333.free-kilo`） | `site_provider` | Kilo AI 公共免费池：零密钥零鉴权，清 Authorization 头转发；`listModels` 钩子只同步 `isFree` 模型（2026-11 快照 473 个中的 13 个，含 1M ctx 的 NVIDIA/百度免费模型） |
+| [free-opencode](plugins/free-opencode/)（`zkl2333.free-opencode`） | `site_provider` | OpenCode Zen 免费车道：`rewritePayload` 注入官方系统提示词+13 工具、免费目录过滤、FreeUsageLimitError 限流分类。**未发版**（依赖核心 [PR #5](https://github.com/Yachiiiiyo/xLyra/pull/5) 的 `impersonate_opencode_client`，方向定了再上架）；调查记录见 [docs/opencode-zen-free.md](docs/opencode-zen-free.md) |
 
 ### 路线记录
 
-- **OpenCode 免费车道（待验证）**：此前请求返回 401，但未做同请求的 Bun/Node 对照，不能据此认定是传输层校验，更不能断言插件不可行。本仓库暂不提供该适配。
+- **OpenCode 免费车道（2026-11-13 已破译）**：四道门全部定案（uTLS Bun ClientHello、Bun 头布局、o2a 现行配方、位取反降序 session 时间戳），纯 Go 实测 200。核心伪装能力走 [PR #5](https://github.com/Yachiiiiyo/xLyra/pull/5)，body 整形/目录/分类在 `free-opencode` 插件；长期能力提案见 [Issue #6](https://github.com/Yachiiiiyo/xLyra/issues/6)（headersFor 动态头钩子）。
 - **注册送 key 型免费层**（OpenRouter free tier 等）不需要插件：通用 `openai` 类型 + 自定义 baseURL + 真 key 直接加站点。
 
 ## 开发流程

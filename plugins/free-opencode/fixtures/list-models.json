@@ -1,0 +1,58 @@
+{
+  "name": "keeps only free models (id contains free, or zero-priced like big-pickle)",
+  "hook": "listModels",
+  "ctx": { "siteType": "zkl2333.free-opencode/gateway", "baseURL": "https://opencode.ai/inference", "credentialType": "api_key", "now": 0 },
+  "responses": [
+    {
+      "match": { "method": "GET", "path": "/v1/models" },
+      "status": 200,
+      "json": {
+        "data": [
+          {
+            "id": "nemotron-3.5-lightning-free",
+            "name": "Nemotron 3.5 Lightning",
+            "cost": { "text": { "input": { "price": 0 }, "output": { "price": 0 } } },
+            "limit": { "context": 262144, "output": 262144 }
+          },
+          {
+            "id": "big-pickle",
+            "name": "Big Pickle",
+            "cost": { "text": { "input": { "price": 0, "cache": { "read": 0, "write": 0 } }, "output": { "price": 0 } } },
+            "limit": { "context": 200000, "output": 32000 }
+          },
+          {
+            "id": "claude-fable-5",
+            "name": "Claude Fable 5",
+            "cost": { "text": { "input": { "price": 10 }, "output": { "price": 50 } } },
+            "limit": { "context": 200000, "output": 64000 }
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "requests": [{ "method": "GET", "path": "/v1/models" }],
+    "result": {
+      "models": [
+        {
+          "name": "nemotron-3.5-lightning-free",
+          "displayName": "Nemotron 3.5 Lightning",
+          "capabilities": {
+            "supported_endpoint_types": ["openai"],
+            "input_token_limit": 262144,
+            "output_token_limit": 262144
+          }
+        },
+        {
+          "name": "big-pickle",
+          "displayName": "Big Pickle",
+          "capabilities": {
+            "supported_endpoint_types": ["openai"],
+            "input_token_limit": 200000,
+            "output_token_limit": 32000
+          }
+        }
+      ]
+    }
+  }
+}

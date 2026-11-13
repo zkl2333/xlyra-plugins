@@ -1,0 +1,7 @@
+{
+  "name": "other failures stay unknown",
+  "hook": "classify",
+  "ctx": { "siteType": "zkl2333.free-opencode/gateway" },
+  "input": { "status": 500, "type": "InternalError", "message": "boom" },
+  "expect": { "result": { "class": "unknown" } }
+}

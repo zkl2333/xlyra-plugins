@@ -1,0 +1,34 @@
+{
+  "apiVersion": 1,
+  "hostApi": 1,
+  "id": "zkl2333.free-opencode",
+  "kind": "site_provider",
+  "name": "OpenCode Zen Free Lane",
+  "description": "OpenCode Zen 免费车道（opencode.ai/inference，匿名凭证 public）。需要网关侧 impersonate_opencode_client（Bun 线上形状传输，xLyra PR #5 起）配合；本插件承担官方客户端 body 整形（系统提示词 + 13 工具）、免费模型目录过滤与免费层限流分类。",
+  "version": "0.1.0",
+  "license": "MIT",
+  "xlyra": ">=1.18.0",
+  "icon": "assets/icon.png",
+  "siteProvider": {
+    "siteType": "zkl2333.free-opencode/gateway",
+    "display": {
+      "name": { "zh": "OpenCode Zen 免费车道", "en": "OpenCode Zen Free Lane" },
+      "subtitle": { "zh": "免密免费模型（需网关 Bun 伪装开关）", "en": "Keyless free models (needs gateway Bun impersonation)" }
+    },
+    "hosts": ["opencode.ai"],
+    "credential": { "model": "api_key" },
+    "protocol": {
+      "kind": "openai_chat",
+      "path": "/v1/chat/completions",
+      "officialBaseURL": "https://opencode.ai/inference",
+      "defaultEndpointTypes": ["openai"]
+    },
+    "models": { "path": "/v1/models", "auth": "bearer" },
+    "request": {
+      "headers": {
+        "user-agent": "opencode/latest/2.1.1/cli",
+        "x-opencode-client": "cli"
+      }
+    }
+  }
+}
