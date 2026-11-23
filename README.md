@@ -15,7 +15,7 @@
 
 ### 路线记录
 
-- **OpenCode 免费车道（2026-11-13 已破译，v1.19 插件 API 已落地）**：四道门全部定案（uTLS Bun ClientHello、Bun 头布局、o2a 现行配方、位取反降序 session 时间戳），纯 Go 实测 200。上游 [PR #5](https://github.com/Yachiiiiyo/xLyra/pull/5) 已合并，[Issue #6](https://github.com/Yachiiiiyo/xLyra/issues/6) 的 `transport.profile` + `signRequest` 能力随 v1.19.0 落地；free-opencode 已迁移为纯插件声明动态头/profile。插件尚未发布；上游文档变更/迁移说明见 [docs/opencode-zen-free.md](docs/opencode-zen-free.md)。
+- **OpenCode 免费车道（2026-11-13 已破译，v1.19 插件 API 已落地）**：四道门全部定案（uTLS Bun ClientHello、Bun 头布局、o2a 现行配方、位取反降序 session 时间戳），纯 Go 实测 200。上游 [PR #5](https://github.com/Yachiiiiyo/xLyra/pull/5) 已合并，[Issue #6](https://github.com/Yachiiiiyo/xLyra/issues/6) 的 `transport.profile` + `signRequest` 能力随 v1.19.0 落地；free-opencode 已迁移为纯插件形态，v0.2.2 已发 GitHub Release 并提交 Cloud 市场（审核中）。上游文档变更/迁移说明见 [docs/opencode-zen-free.md](docs/opencode-zen-free.md)。
 - **注册送 key 型免费层**（OpenRouter free tier 等）不需要插件：通用 `openai` 类型 + 自定义 baseURL + 真 key 直接加站点。
 
 ## 开发流程
