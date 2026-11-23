@@ -105,8 +105,16 @@ chat 不带 Accept、官方提示词 v2 + 工具 2.x body）。注意 dsh-our-fr
    用户侧：站点 `base_url=https://opencode.ai/inference`、api_key `public`、
    开 `impersonate_opencode_client`。
 
-Windows 克隆基线注意：`go build ./...` 因 pirpc 约束失败；内置插件 sha256 导致
-95 个既有测试失败——补丁前后失败集合 diff 为空（零新增失败）。
+## v1.19 插件化迁移（2026-11-23）
+
+上游 PR #5 已合并、Issue #6 能力随 v1.19.0 落地；此前需要核心代码处理的动态身份已迁到 `free-opencode` 插件：
+
+- `transport.profile: "bun"` 选择宿主内置 Bun TLS + HTTP/1.1 Bun 头布局；宿主继续负责 SSRF、代理和主机白名单。
+- manifest `request.headers` 用 `{{random.hex:40}}` 每请求生成 project id。
+- `signRequest` 用宿主提供的站点/插件隔离 `sessionKey`，按官方降序时间格式铸造 session id，并通过 site-scoped storage 粘性复用；超过 30 天窗口后重铸；无 sessionKey 时用随机 seed，避免无关请求共享桶。
+- `rewritePayload`、`listModels`、`classify` 继续承载官方 prompt/tool、免费目录过滤和 `FreeUsageLimitError` 分类。
+
+因此 v1.19 起不需要管理员手动打开 `gateway.impersonate_opencode_client`；显式打开时宿主优先级高于插件 profile。迁移插件后，v1.19 CLI 构建、7 个 fixtures、签名打包和验包均通过；按用户要求尚未发布 Cloud/Release。
 
 ### 已否决：opencode2api sidecar（仅作机制验证记录）
 

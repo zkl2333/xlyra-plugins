@@ -2,30 +2,92 @@
  * free-opencode —— OpenCode Zen 免费车道（opencode.ai/inference，匿名凭证 public）
  * 的站点类型：官方客户端 body 整形 + 免费模型过滤 + 限流分类。
  *
- * 分层（与 xLyra 核心的约定，见仓库 docs/opencode-zen-free.md）：
- *  - 传输与身份头（Bun 线上形状、session 铸造、每请求 project）归核心的
- *    `gateway.impersonate_opencode_client`（需 Yachiiiiyo/xLyra#5 起的核心）；
- *    本插件绝不声明 x-opencode-session 或 x-opencode-project 头——静态 session
- *    是共享的预烧配额桶，实测快速 429。
- *  - 本插件（manifest 静态头 + 钩子）承担跟版面：
- *      rewritePayload：注入官方系统提示词 + 13 个官方工具（免费层按 agent
- *        形状校验请求体；2026-11 实测裸 body 429、整形 body 200）；
- *      listModels：目录只留免费模型（id 含 free 或输入输出全零价），防止误调
- *        付费模型 401 把唯一 public 占位凭据整把冷却；
- *      classify：FreeUsageLimitError 归为 limited（核心只认 Go 套餐的
- *        GoUsageLimitError）。
- *  - manifest 静态头只覆盖身份类静态值（UA 版本、client 标识）——执行序上插件
- *    头在核心 zen 头之后写入，胜出；UA 跟版只需发新版插件。
+ * - signRequest 用稳定 sessionKey 派生官方降序 session id；同一会话保持粘性，
+ *   超过官方窗口后基于新 now 重铸；没有 sessionKey 时每请求随机 session，
+ *   避免无关请求共享配额桶；
+ * - rewritePayload 注入官方系统提示词 + 13 工具；listModels 过滤免费目录；
+ *   classify 将 FreeUsageLimitError 映射到 limited。
+ *
+ * session/project 头由 signRequest/manifest 动态生成，绝不使用静态 session。
  */
-import type { ErrorClassifyResult, JsonObject, ModelListDecision, ModelListEntry, ProbeContext, ProbeStep, RewritePayloadContext } from "@yachiyo-5i/xlyra-plugin-sdk"
+import type { ErrorClassifyResult, JsonObject, ModelListDecision, ModelListEntry, ProbeContext, ProbeStep, ProtocolBuildContext, ProtocolSignInput, ProtocolSignResult, RewritePayloadContext } from "../types-xlyra-v119"
 import { shapeChatPayload } from "./shaping"
 
 export const meta = { apiVersion: 1, id: "zkl2333.free-opencode", kind: "site_provider" }
 
-/** rewritePayload：openai_chat 之外的协议原样通过（本站点类型只声明 chat）。 */
+const SESSION_PREFIX = "opencode.session."
+const SESSION_WINDOW_MS = 30 * 24 * 60 * 60 * 1000
+const SESSION_RANDOM_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+/** rewritePayload：只改 body，官方 prompt/tool 资产跟插件版本走。 */
 export function rewritePayload(ctx: RewritePayloadContext, payload: Record<string, unknown>): Record<string, unknown> {
   if (ctx.protocol && ctx.protocol !== "openai_chat") return payload
   return shapeChatPayload(payload)
+}
+
+/**
+ * 把官方 OpenCode 的 session 编码和动态头放进插件层：
+ * - transport.profile=bun 让宿主统一使用 Bun TLS/HTTP/1.1 线上形状；
+ * - request.headers 的 random.hex 模板生成每请求 project；
+ * - signRequest 只改写 session 头族，sessionKey 相同的会话保持粘性；
+ *   没有 sessionKey 时不跨请求共享，避免把无会话请求挤进同一个配额桶。
+ */
+export function signRequest(ctx: ProtocolBuildContext, _req: ProtocolSignInput): ProtocolSignResult {
+  const sessionID = sessionFor(ctx)
+  return {
+    headers: {
+      "x-opencode-session-id": sessionID,
+      "x-session-affinity": sessionID,
+      "x-opencode-session": sessionID,
+      "x-session-id": sessionID,
+    },
+  }
+}
+
+function sessionFor(ctx: ProtocolBuildContext): string {
+  const now = Number.isFinite(ctx.now) && (ctx.now ?? 0) > 0 ? Number(ctx.now) : Date.now()
+  const hint = typeof ctx.sessionKey === "string" ? ctx.sessionKey.trim() : ""
+  if (hint === "") return mintSession(now, bytes.toHex(crypto.randomBytes(16)))
+
+  const keyHash = crypto.sha256(hint)
+  const storageKey = `${SESSION_PREFIX}${keyHash.slice(0, 32)}`
+  const saved = storage.get(storageKey)
+  if (saved && typeof saved === "object" && !Array.isArray(saved)) {
+    const session = (saved as Record<string, unknown>).session
+    if (typeof session === "string" && isOfficialSession(session, now)) return session
+  }
+  const session = mintSession(now, keyHash)
+  storage.set(storageKey, { session, updatedAt: now })
+  return session
+}
+
+function mintSession(now: number, seed: string): string {
+  const digest = crypto.sha256(`opencode-session\0${seed}`)
+  const offset = Number.parseInt(digest.slice(0, 8), 16) % SESSION_WINDOW_MS
+  const midnight = Math.floor(now / 86400000) * 86400000
+  const base = BigInt(midnight - offset)
+  const encoded = (~((base << 12n) | 1n)) & 0xffffffffffffn
+  const randomValue = BigInt(`0x${digest.slice(8, 28)}`)
+  let quotient = randomValue
+  let random = ""
+  for (let index = 0; index < 14; index += 1) {
+    const digit = Number(quotient % 62n)
+    random = SESSION_RANDOM_CHARS[digit] + random
+    quotient /= 62n
+  }
+  return `ses_${encoded.toString(16).padStart(12, "0")}${random}`
+}
+
+function isOfficialSession(value: string, now: number): boolean {
+  if (!/^ses_[0-9a-f]{12}[0-9A-Za-z]{14}$/.test(value)) return false
+  const timePart = value.slice(4, 16)
+  if (!/^[0-9a-f]{9}f[c-f][0-9a-f]$/.test(timePart)) return false
+  const inverted = BigInt(`0x${timePart}`)
+  const phase = Number(((~inverted) & 0xffffffffffffn) >> 12n)
+  const phaseMS = 2 ** 36
+  const nowPhase = Math.floor(now) % phaseMS
+  const age = (nowPhase - phase + phaseMS) % phaseMS
+  return age <= SESSION_WINDOW_MS
 }
 
 /** 上游 /v1/models 条目中本钩子读取的字段（OpenCode Zen 目录形状）。 */

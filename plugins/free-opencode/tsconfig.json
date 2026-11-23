@@ -1,7 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["@yachiyo-5i/xlyra-plugin-sdk"]
+    "types": []
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*",
+    "types-xlyra-v119.d.ts"
+  ]
 }

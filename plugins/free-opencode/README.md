@@ -3,68 +3,74 @@
 OpenCode Zen 免费车道（`https://opencode.ai/inference`，匿名凭证 `public`）的
 site_provider 插件。免密使用 OpenCode 官方 CLI 免费层的模型
 （`nemotron-3.5-lightning-free`、`deepseek-v4.1-flash-free`、`glm-5.3-flash-free`、
-`big-pickle` 等 12+ 个，随上游目录波动）。
+`big-pickle` 等，具体随上游目录波动）。要求 xLyra **v1.19.0+**。
 
-## ⚠️ 前置要求（核心能力）
+## 核心要求
 
-免费车道按**官方 OpenCode CLI（Bun 运行时）的线上形状**校验请求。本插件只承担
-应用层；传输与身份头需要网关核心的 Bun 伪装能力：
+上游免费车道只接受官方 OpenCode CLI（Bun runtime）的传输形状。插件现通过 v1.19
+插件 API 自带：
 
-- **xLyra PR [Yachiiiiyo/xLyra#5](https://github.com/Yachiiiiyo/xLyra/pull/5) 起的
-  `gateway.impersonate_opencode_client`**（uTLS Bun ClientHello + Bun 头布局 +
-  官方降序时间戳 session 铸造 + 每请求 40-hex project）。
-- 没有该核心能力时安装本插件无破坏，但对话请求会被上游 401/429 拒收。
+- `transport.profile: "bun"`：宿主对网关转发与站点分步请求统一使用 Bun TLS/
+  HTTP/1.1 头布局；仍由宿主负责 SSRF 防护、代理和主机白名单。
+- `request.headers`：UA、`x-opencode-client` 和每请求随机 project id 模板。
+- `signRequest` 用 `sessionKey` 对应的 site-scoped storage 持久化官方降序 session id，过期后重铸；无 sessionKey 时每请求随机。
 
-机制与四道门的完整调查记录：仓库 [docs/opencode-zen-free.md](../../docs/opencode-zen-free.md)。
+因此 **不再需要手动打开 `gateway.impersonate_opencode_client`**。当管理员显式打开
+核心 impersonation 开关时，宿主优先级更高，仍会覆盖插件 transport profile。
 
-## 分层（与核心的约定）
+## 插件职责
 
-| 层 | 归属 | 说明 |
-|---|---|---|
-| TLS ClientHello / HTTP/1.1 / 头布局 / session 铸造 / 每请求 project | 核心（PR #5） | 结构性机制，插件沙箱不可及 |
-| **官方系统提示词 + 13 工具注入** | 本插件 `rewritePayload` | 免费层的 agent 形状校验（实测：同传输同头，裸 body 429、整形 body 200） |
-| **免费模型目录过滤** | 本插件 `listModels` | 只留 id 含 `free` 或文本输入输出全零价的模型；防误调付费模型 401 冷却唯一 `public` 占位凭据 |
-| **限流分类** | 本插件 `classify` | `FreeUsageLimitError`（免费层配额）→ `limited`；核心只认 Go 套餐的 `GoUsageLimitError` |
-| UA 版本 / `x-opencode-client` | 本插件 manifest 静态头 | 执行序上插件头在核心 zen 头之后写入，胜出——UA 跟版只需发新版插件 |
-
-**设计红线**：manifest 绝不声明 `x-opencode-session` / `x-opencode-project`——
-静态 session 是共享的预烧配额桶（实测快速 429），动态身份头必须由核心生成。
+| 责任 | 实现 |
+|---|---|
+| Bun TLS profile 与线上头布局 | manifest `transport.profile` |
+| 每请求 40-hex project | manifest `{{random.hex:40}}` |
+| session 降序编码、粘性与过期重铸 | `signRequest` + `sessionKey` + site-scoped `storage` |
+| 官方系统提示词 + 13 工具集 | `rewritePayload` |
+| 免费目录过滤 | `listModels`：保留 id 含 `free` 或文本输入/输出均零价模型 |
+| 免费层限流分类 | `classify`：`FreeUsageLimitError` → `limited` |
 
 ## 使用
 
-1. 安装并启用本插件（`.xlp` 导入；公钥见 release 附件）。
+1. 在 xLyra v1.19.0+ 安装并启用本插件（`.xlp` 导入；公钥随包附带）。
 2. 建站点：类型选 `zkl2333.free-opencode/gateway`，API Key 填 `public`
-   （官方匿名凭证，会被原样放进 `Authorization: Bearer public`）。
-3. 站点设置打开 `gateway.impersonate_opencode_client`（PR #5 起）。
-4. 模型同步后即可使用（目录只含免费模型）。
+   （官方匿名凭证，会被原样用于 `Authorization: Bearer public`）。
+3. 同步模型后即可使用；插件只列出免费模型。
 
 ## 维护清单（上游漂移时）
 
 | 症状 | 更新处 | 发版 |
 |---|---|---|
-| 官方提示词/工具集漂了（403/429 FreeTierError 变多） | `src/assets.ts`（从 opencode2api 仓库取新 `opencode_prompt_v2.txt` / `opencode_tools.json`，跑生成脚本） | 插件 |
-| CLI 版本号 UA 漂了 | `manifest.json` `request.headers` | 插件 |
-| 目录 free 判定字段变了 | `src/index.ts` `isFreeModel` | 插件 |
-| Bun ClientHello / session 编码变了 | xLyra 核心（`bunClientHelloSpec` / `openCodeGoNewSessionID`） | 核心 PR |
+| 官方提示词/工具集漂了（FreeTierError 变多） | `src/assets.ts`，刷新后跑捕获体保真生成器 | 插件 |
+| CLI 版本号或静态 client 标识变化 | `manifest.json` `request.headers` | 插件 |
+| 免费目录字段变化 | `src/index.ts` `isFreeModel` | 插件 |
+| Bun ClientHello/头布局变化 | 宿主内置 `transport.profile=bun` | 核心 |
+| session 编码/窗口变化 | `src/index.ts` `mintSession` 与 session fixtures | 插件 |
 
-改 `src/assets.ts` 或整形逻辑后：重新生成黄金 fixtures
-（`node .research/scripts/gen-free-opencode-fixtures.mjs`，脚本同时做与捕获
-官方 body 的保真比对）。
-
-## 测试
+改资产或整形逻辑后运行：
 
 ```
+`xlyra-plugin test plugins/free-opencode`
+```
+
+本地 fixture 检查改用与正式安装相同的受信签名 CLI `xlyra-plugin test`；资产保真检查脚本只用于刷新官方提示词/工具快照。
+
+## 测试与打包
+
+```
+xlyra-plugin build plugins/free-opencode
 xlyra-plugin test plugins/free-opencode
+xlyra-plugin pack --sign <developer-private-key.pem> plugins/free-opencode
+xlyra-plugin verify plugins/free-opencode/dist/zkl2333.free-opencode-0.2.2.xlp
 ```
 
-6 个 fixtures：rewrite（宿主默认工具/已整形/自定义工具改名）、listModels
-（free 过滤）、classify（FreeUsageLimitError→limited / 其他→unknown）。
+签名私钥仅供本地 pack 使用，不得入库。发布记录：GitHub Release `zkl2333.free-opencode-v0.2.2`
+（附签名 `.xlp` 与公钥）；Cloud 市场提交同版本（审核中）。
 
 ## 许可与致谢
 
 - 本插件 MIT。
-- 官方提示词/工具资产为 OpenCode CLI 公开捕获件（经由
-  [opencode2api](https://github.com/jasonxu114514/opencode2api)（GPL-3.0）仓库的镜像维护）。
-- 整形逻辑移植自 [dsh-our-free-model](https://github.com/Ebony-Vinyl/dsh-our-free-model)
-  （MIT）内嵌的 opencode2api v1.4.7 JS 端口；wire 名摘要以无依赖 FNV-1a 替代
-  sha256（上游只校验 `clint_` + hex 形状，无法验证摘要）。
+- 官方提示词/工具资产经 [opencode2api](https://github.com/jasonxu114514/opencode2api)
+  （GPL-3.0）仓库镜像维护。
+- 整形逻辑参考 [dsh-our-free-model](https://github.com/Ebony-Vinyl/dsh-our-free-model)
+  （MIT）内嵌的 opencode2api v1.4.7 JS 端口；wire 名摘要用 hostApi v2 的
+  `crypto.sha256` 生成 `clint_<12 hex>`。

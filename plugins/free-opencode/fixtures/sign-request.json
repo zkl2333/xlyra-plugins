@@ -1,0 +1,36 @@
+{
+  "name": "session identity headers are applied by signRequest",
+  "hook": "signRequest",
+  "ctx": {
+    "siteType": "zkl2333.free-opencode/gateway",
+    "baseURL": "https://opencode.ai/inference",
+    "model": "nemotron-3.5-lightning-free",
+    "stream": true,
+    "protocol": "openai_chat",
+    "now": 1794566400000,
+    "sessionKey": "fixture-session-key-v1"
+  },
+  "input": {
+    "method": "POST",
+    "url": "https://opencode.ai/inference/v1/chat/completions",
+    "headers": { "Content-Type": "application/json" },
+    "body": "{\"model\":\"nemotron-3.5-lightning-free\",\"stream\":true}"
+  },
+  "expect": {
+    "sign": {
+      "headers": {
+        "x-opencode-session-id": "ses_e63b3ac12ffe38BZ6Eg9nTNchf",
+        "x-session-affinity": "ses_e63b3ac12ffe38BZ6Eg9nTNchf",
+        "x-opencode-session": "ses_e63b3ac12ffe38BZ6Eg9nTNchf",
+        "x-session-id": "ses_e63b3ac12ffe38BZ6Eg9nTNchf"
+      }
+    },
+    "storage": {
+      "opencode.session.9d25d64a1df284fcf64164ec64e8e47e": {
+        "session": "ses_e63b3ac12ffe38BZ6Eg9nTNchf",
+        "updatedAt": 1794566400000
+      }
+    }
+  }
+}
+

@@ -6,16 +6,16 @@
 
 ## 插件一览
 
-`free-*` 系列：免密钥、免伪装的公开免费模型池，每池一个包（xLyra 规定一个包只能声明一个站点类型，聚合由网关天然完成）。
+`free-*` 系列：公开免费模型来源，一个来源一个插件包（xLyra 规定一个包只能声明一个站点类型，聚合由网关天然完成）；各来源可能需要不同的宿主传输 profile 或请求整形。
 
 | 插件 | kind | 说明 |
 | --- | --- | --- |
 | [free-kilo](plugins/free-kilo/)（`zkl2333.free-kilo`） | `site_provider` | Kilo AI 公共免费池：零密钥零鉴权，清 Authorization 头转发；`listModels` 钩子只同步 `isFree` 模型（2026-11 快照 473 个中的 13 个，含 1M ctx 的 NVIDIA/百度免费模型） |
-| [free-opencode](plugins/free-opencode/)（`zkl2333.free-opencode`） | `site_provider` | OpenCode Zen 免费车道：`rewritePayload` 注入官方系统提示词+13 工具、免费目录过滤、FreeUsageLimitError 限流分类。**未发版**（依赖核心 [PR #5](https://github.com/Yachiiiiyo/xLyra/pull/5) 的 `impersonate_opencode_client`，方向定了再上架）；调查记录见 [docs/opencode-zen-free.md](docs/opencode-zen-free.md) |
+| [free-opencode](plugins/free-opencode/)（`zkl2333.free-opencode`） | `site_provider` | OpenCode Zen 免费车道：插件自带 `transport.profile=bun`、动态 project/session 头、官方 body 整形、免费目录过滤及限流分类。v0.2.2 已提交 Cloud 市场（审核中）并在 v1.19.0 实例端到端实测通过；调查见 [docs/opencode-zen-free.md](docs/opencode-zen-free.md) |
 
 ### 路线记录
 
-- **OpenCode 免费车道（2026-11-13 已破译）**：四道门全部定案（uTLS Bun ClientHello、Bun 头布局、o2a 现行配方、位取反降序 session 时间戳），纯 Go 实测 200。核心伪装能力走 [PR #5](https://github.com/Yachiiiiyo/xLyra/pull/5)，body 整形/目录/分类在 `free-opencode` 插件；长期能力提案见 [Issue #6](https://github.com/Yachiiiiyo/xLyra/issues/6)（headersFor 动态头钩子）。
+- **OpenCode 免费车道（2026-11-13 已破译，v1.19 插件 API 已落地）**：四道门全部定案（uTLS Bun ClientHello、Bun 头布局、o2a 现行配方、位取反降序 session 时间戳），纯 Go 实测 200。上游 [PR #5](https://github.com/Yachiiiiyo/xLyra/pull/5) 已合并，[Issue #6](https://github.com/Yachiiiiyo/xLyra/issues/6) 的 `transport.profile` + `signRequest` 能力随 v1.19.0 落地；free-opencode 已迁移为纯插件声明动态头/profile。插件尚未发布；上游文档变更/迁移说明见 [docs/opencode-zen-free.md](docs/opencode-zen-free.md)。
 - **注册送 key 型免费层**（OpenRouter free tier 等）不需要插件：通用 `openai` 类型 + 自定义 baseURL + 真 key 直接加站点。
 
 ## 开发流程

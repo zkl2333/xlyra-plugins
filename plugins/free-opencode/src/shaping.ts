@@ -2,23 +2,13 @@
 //
 // 移植自 dsh-our-free-model 内嵌的 opencode2api v1.4.7 端口（MIT，
 // https://github.com/Ebony-Vinyl/dsh-our-free-model 的 src/o2a.js），只保留
-// chat 形状；免费车道按官方 CLI 形状校验请求体——官方系统提示词 + 13 个
-// 官方工具，客户端自带工具改名为不透明的 clint_<digest> 线上名（2026-11
-// 实测：同一传输/头/session 下，裸 body 被 429 拒收，整形 body 200）。
-//
-// 与参考实现的差异：
-//  - wire 名摘要用无依赖的 FNV-1a 而非 sha256：上游不可能验证摘要（它不知
-//    道原始名），只校验形状（clint_ + 12 hex）；
-//  - <env> 块的工作目录/平台取固定值、日期取发布期常量：内容未被上游校验
-//    （参考实现发送任意网关 cwd 也能过），活日期会让离线 fixtures 隔夜失效。
+// chat 形状；wire 工具名使用官方 SHA-256 前 12 位。
 import { OFFICIAL_PROMPT, OFFICIAL_SKILLS, OFFICIAL_TOOLS, V2_OFFICIAL_TOOL_ORDER } from "./assets"
 
 const OFFICIAL_PROMPT_MARKER = "You are opencode, an interactive CLI tool"
-
-// env 块的固定值；发布新版插件时顺带更新日期（见 README 维护清单）。
 const ENV_WORK_DIR = "/workspace"
 const ENV_PLATFORM = "linux"
-const ENV_DATE = "Fri Nov 13 2026"
+const ENV_DATE = "Mon Nov 23 2026"
 
 const CLIENT_TOOL_PREFIX = "clint_"
 const CLIENT_TOOL_DIGEST_LENGTH = 12
@@ -33,21 +23,13 @@ function foldToolName(name: string): string {
   return out
 }
 
-/** FNV-1a 48-bit，输出 12 个 hex 字符（替代参考实现里的 sha256 摘要）。 */
-function fnvHex12(value: string): string {
-  let h1 = 0x811c9dc5
-  let h2 = 0x01000193
-  for (let i = 0; i < value.length; i += 1) {
-    const code = value.charCodeAt(i)
-    h1 = Math.imul(h1 ^ code, 0x01000193) >>> 0
-    h2 = Math.imul(h2 ^ (code + i), 0x85ebca6b) >>> 0
-  }
-  return (h1.toString(16).padStart(8, "0") + h2.toString(16).padStart(8, "0")).slice(0, CLIENT_TOOL_DIGEST_LENGTH)
+function shaHex12(value: string): string {
+  return crypto.sha256(value).slice(0, CLIENT_TOOL_DIGEST_LENGTH)
 }
 
 /** 客户端工具的不透明线上名；冲突时追加 _2、_3…… */
 function clientToolWireName(name: string, used: Set<string>): string {
-  const base = CLIENT_TOOL_PREFIX + fnvHex12(String(name))
+  const base = CLIENT_TOOL_PREFIX + shaHex12(String(name))
   if (!used.has(base)) {
     used.add(base)
     return base
