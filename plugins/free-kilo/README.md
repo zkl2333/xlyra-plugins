@@ -30,6 +30,7 @@ Kilo 免费池的行为很特别（2026-11-13 实测）：
    ```
 2. 安装：从 **设置 → 插件 → 市场** 安装（上架后），或者在「已安装」里上传 `dist/zkl2333.free-kilo-<version>.xlp`。手动上传需要先导入公钥。启用时确认主机 `api.kilo.ai`。
 3. 添加站点：类型选 **Kilo 免费池**（`zkl2333.free-kilo/gateway`）。**API Key 随便填**（如 `free`），它只用来满足表单校验，不会发往上游。baseURL 留空即使用官方端点。
+   - **支持 `credential.allowEmpty` 的上游版本**（test 分支已合入、随下一版发布）上，API Key 可以**直接留空**：本插件 v0.3.0 起声明了 `allowEmpty`，该版本宿主允许空 key 记录，且空 key 时默认不发送任何上游认证头。旧版本宿主忽略此声明，继续按上面的占位方式填即可。
 4. 同步模型。列表里只会出现下表这类免费模型。
 
 客户端调用时用 xLyra 归并后的模型名，例如 `kilo-auto/free` 在 `/v1/models` 里显示为 `kilo-auto`（直接写 `kilo-auto/free` 也能命中）。
