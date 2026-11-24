@@ -12,3 +12,4 @@ dist/
 
 # local investigation artifacts (binaries, downloaded sources)
 .research/
+.oc-*.json
