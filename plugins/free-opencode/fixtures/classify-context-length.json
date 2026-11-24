@@ -1,0 +1,12 @@
+{
+  "name": "400 context_length_exceeded maps to limited for site failover",
+  "hook": "classify",
+  "ctx": { "siteType": "zkl2333.free-opencode/gateway" },
+  "input": {
+    "status": 400,
+    "code": "context_length_exceeded",
+    "type": "invalid_request_error",
+    "message": "Your request resulted in more tokens than this model's maximum context length allows. Please reduce the length of the messages or run compaction."
+  },
+  "expect": { "result": { "class": "limited", "reason": "context length exceeded on this model" } }
+}

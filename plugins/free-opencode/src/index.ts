@@ -194,9 +194,17 @@ function positiveInteger(value: unknown): number | undefined {
  */
 export function classify(_ctx: { siteType: string }, input: { status: number; code?: string; type?: string; message?: string }): ErrorClassifyResult {
   const type = (input.type ?? "").trim()
+  const code = (input.code ?? "").trim()
   const message = (input.message ?? "")
   if (input.status === 429 && (type === "FreeUsageLimitError" || message.includes("Free usage limit"))) {
     return { class: "limited", reason: "opencode zen free-tier usage limit" }
+  }
+  // 上下文超限：请求本身合法，只是超出该模型窗口。归为 limited 以复用
+  // 站点转移（转向更大窗口的候选站点），并给本凭据短暂冷却（无
+  // Retry-After 时 30s）——v1.19 选路不按 input_token_limit 过滤，这是
+  // 插件层唯一能把 oversized 请求送去正确站点的杠杆。
+  if ((input.status === 400 || input.status === 413) && (code === "context_length_exceeded" || message.includes("maximum context length"))) {
+    return { class: "limited", reason: "context length exceeded on this model" }
   }
   return { class: "unknown" }
 }
