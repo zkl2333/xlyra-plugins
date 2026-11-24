@@ -27,7 +27,9 @@
 应用层整形（两项都来自社区参考，dsh-our-free-model 的 MIT 移植与 opencode2api 一致）：
 
 - 官方系统提示词（base + `<env>` 块 + skills 列表）注入最前；
-- 客户端工具改名为 `clint_<sha256前12hex>`，再附加官方 13 工具集（2.x 定义）；
+- 客户端工具改名为可逆的 `custom_<hex(原名)>`（超长名退化为 sha256 截断摘要），
+  描述空格替换为 NBSP，再附加官方 13 工具集（2.x 定义）；响应流里
+  `transformStream` 把 `custom_<hex>` 解码回客户端原名；
 - 会话 id 必须是"铸造"的真时间戳（UTC 今天减最多 30 天），project id 每请求 40-hex 随机。
 
 伪装代价：官方提示词 + 工具定义 ≈ 5.8k prompt tokens（上游 prompt cache 可命中 ~1.8k）。
@@ -81,6 +83,15 @@ chat 不带 Accept、官方提示词 v2 + 工具 2.x body）。注意 dsh-our-fr
 解码成远未来 → 429 `FreeUsageLimitError`（身份已过、只怨时间戳）。project id
 每请求换新 40-hex 没问题（实测 200）。二分证据：旧 session+新 project=200，
 新 session（正序编码）+旧 project=429。
+
+**第五道门（2026-11-24 定案）：免费车道工具门**。同传输/头/session 下实测：
+必须携带官方定义的 `read` 和 `shell`（客户端定义顶替官方 `read` 会被拒）；
+额外工具放行，**但 `clint_` 前缀被单独拉黑**（`cl1nt_` 可过）——该前缀正是
+opencode2api/dsh 旧版给客户端工具的命名，属上游针对性拦截；不合规请求统一回
+429 `FreeUsageLimitError`（与额度无关，Retry-After 是模板值）。应对：客户端工具
+改用可逆 `custom_<hex(原名)>` 线上名 + 描述 NBSP（o2a v1.5.1 同思路，用 `mcp_`），
+`transformStream` 响应侧解码回原名。已知残留：模型若调用**官方**工具，客户端收到
+官方名+官方参数（客户端未必实现）；非流式响应不经 transformStream 解码。
 
 核心补丁内容（全部有实验代码背书，见 `.research/header-order-exp/main.go`）——
 **已落地：xLyra 本地克隆分支 `feat/opencode-zen-bun-transport`，commit `2649391`，

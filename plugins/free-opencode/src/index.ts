@@ -10,8 +10,8 @@
  *
  * session/project 头由 signRequest/manifest 动态生成，绝不使用静态 session。
  */
-import type { ErrorClassifyResult, JsonObject, ModelListDecision, ModelListEntry, ProbeContext, ProbeStep, ProtocolBuildContext, ProtocolSignInput, ProtocolSignResult, RewritePayloadContext } from "../types-xlyra-v119"
-import { shapeChatPayload } from "./shaping"
+import type { ErrorClassifyResult, JsonObject, ModelListDecision, ModelListEntry, ProbeContext, ProbeStep, ProtocolBuildContext, ProtocolSignInput, ProtocolSignResult, RewritePayloadContext, StreamTransformContext, StreamTransformEvent, StreamTransformResult } from "../types-xlyra-v119"
+import { clientToolOriginalName, shapeChatPayload } from "./shaping"
 
 export const meta = { apiVersion: 1, id: "zkl2333.free-opencode", kind: "site_provider" }
 
@@ -23,6 +23,40 @@ const SESSION_RANDOM_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmn
 export function rewritePayload(ctx: RewritePayloadContext, payload: Record<string, unknown>): Record<string, unknown> {
   if (ctx.protocol && ctx.protocol !== "openai_chat") return payload
   return shapeChatPayload(payload)
+}
+
+/**
+ * transformStream：把响应流里模型发出的 custom_<b64> 工具名解码回客户端
+ * 原名——rewritePayload 把客户端工具改成了可逆线上名，这里在 SSE 事件级
+ * （5ms 预算）还原，客户端才能执行自己的工具。仅覆盖流式响应；data 为
+ * [DONE] 或非 JSON 时原样通过。
+ */
+export function transformStream(ctx: StreamTransformContext, event: StreamTransformEvent): StreamTransformResult {
+  if (ctx.protocol && ctx.protocol !== "openai_chat") return {}
+  const data = event.data
+  if (typeof data !== "string" || data.trim() === "" || data.trim() === "[DONE]") return {}
+  let chunk: any
+  try {
+    chunk = JSON.parse(data)
+  } catch {
+    return {}
+  }
+  if (!chunk || typeof chunk !== "object" || !Array.isArray(chunk.choices)) return {}
+  let changed = false
+  for (const choice of chunk.choices) {
+    const calls = choice?.delta?.tool_calls
+    if (!Array.isArray(calls)) continue
+    for (const call of calls) {
+      const fn = call?.function
+      if (!fn || typeof fn.name !== "string") continue
+      const original = clientToolOriginalName(fn.name)
+      if (original !== null) {
+        fn.name = original
+        changed = true
+      }
+    }
+  }
+  return changed ? { data: JSON.stringify(chunk) } : {}
 }
 
 /**

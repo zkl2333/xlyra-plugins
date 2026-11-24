@@ -4,8 +4,8 @@
   "id": "zkl2333.free-opencode",
   "kind": "site_provider",
   "name": "OpenCode Zen Free Lane",
-  "description": "OpenCode Zen 免费车道（opencode.ai/inference，匿名凭证 public）。插件自带 Bun 传输 profile、动态项目头和官方 session 头铸造；承担官方客户端 body 整形、免费模型目录过滤与免费层限流分类。",
-  "version": "0.2.2",
+  "description": "OpenCode Zen 免费车道（opencode.ai/inference，匿名凭证 public）。插件自带 Bun 传输 profile、动态 project/session 头与官方 body 整形；客户端工具以可逆 custom_ 线上名收编并在响应流还原，免费目录过滤与限流分类内置。",
+  "version": "0.3.0",
   "license": "MIT",
   "xlyra": ">=1.19.0",
   "icon": "assets/icon.png",
@@ -52,5 +52,12 @@
         "x-opencode-project": "{{random.hex:40}}"
       }
     }
-  }
+  },
+  "exports": [
+    "classify",
+    "listModels",
+    "rewritePayload",
+    "signRequest",
+    "transformStream"
+  ]
 }

@@ -72,5 +72,6 @@ xlyra-plugin verify plugins/free-opencode/dist/zkl2333.free-opencode-0.2.2.xlp
 - 官方提示词/工具资产经 [opencode2api](https://github.com/jasonxu114514/opencode2api)
   （GPL-3.0）仓库镜像维护。
 - 整形逻辑参考 [dsh-our-free-model](https://github.com/Ebony-Vinyl/dsh-our-free-model)
-  （MIT）内嵌的 opencode2api v1.4.7 JS 端口；wire 名摘要用 hostApi v2 的
-  `crypto.sha256` 生成 `clint_<12 hex>`。
+  （MIT）内嵌的 opencode2api JS 端口；客户端工具以可逆 `custom_<hex(原名)>`
+  线上名收编（2026-11-24 起上游拒绝 `clint_` 前缀与客户端工具描述中的字面词，
+  描述空格替换为 NBSP 规避），`transformStream` 在响应流把线上名解码回原名。

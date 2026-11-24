@@ -1,0 +1,14 @@
+{
+  "name": "custom_ tool names decode back to the client's original names",
+  "hook": "transformStream",
+  "ctx": { "siteType": "zkl2333.free-opencode/gateway", "model": "deepseek-v4.1-flash-free", "protocol": "openai_chat" },
+  "input": {
+    "event": null,
+    "data": "{\"id\":\"x\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"call_1\",\"function\":{\"name\":\"custom_7570646174655f706c616e\",\"arguments\":\"{}\"}},{\"index\":1,\"function\":{\"name\":\"shell\",\"arguments\":\"{}\"}}]}}]}"
+  },
+  "expect": {
+    "result": {
+      "data": "{\"id\":\"x\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"call_1\",\"function\":{\"name\":\"update_plan\",\"arguments\":\"{}\"}},{\"index\":1,\"function\":{\"name\":\"shell\",\"arguments\":\"{}\"}}]}}]}"
+    }
+  }
+}
